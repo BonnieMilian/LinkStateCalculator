@@ -32,10 +32,14 @@ export default class InputNodes extends Component {
     this.state = {
         from: "",
         to: "",
-        cost: 0
+        cost: 1,
+        who: ""
     }
 
     this.nodeConnections = [];
+    this.connectionsMatrix = [];
+    this.linkStateSteps = [];
+    this.N = [];
     
     this.handleChangeInput = this.handleChangeInput.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -49,17 +53,60 @@ export default class InputNodes extends Component {
     });
   }
 
-  handleSubmit(event) {
-    console.log("Calculate");
-    console.log(this.nodeConnections);
+  handleSubmit(e) {
+    e.preventDefault();
+   
+    this.connectionsMatrix = [];
+    this.linkStateSteps = [];
+    this.N = [];
 
-    event.preventDefault();
+    if(this.nodeConnections.length === 0 || this.state.who === "")
+        return;
+    
+    console.log("Prepare Data");
+    console.log(this.nodeConnections);
+    
+    for(var cn = 0; cn < this.nodeConnections.length; cn++) {
+        if(!this.N.includes(this.nodeConnections[cn][0]))
+            this.N.push(this.nodeConnections[cn][0]);
+        if(!this.N.includes(this.nodeConnections[cn][1]))
+            this.N.push(this.nodeConnections[cn][1]);
+    };
+
+    if(!this.N.includes(this.state.who))
+        return;
+
+    console.log(this.N);
+    
+    for(var cn = 0; cn < this.N.length; cn++) {
+        var costs = [];
+        for(var cnx = 0; cnx < this.N.length; cnx++)
+            costs.push(999999999999999);
+        
+        this.connectionsMatrix.push(costs);
+    }
+
+    var v, w = 0;
+    for(var cn = 0; cn < this.nodeConnections.length; cn++) {
+        v = this.N.indexOf(this.nodeConnections[cn][0]);
+        w = this.N.indexOf(this.nodeConnections[cn][1]);
+        if(v != -1 && w != -1 ) {
+            this.connectionsMatrix[v][w] = this.nodeConnections[cn][2];
+            this.connectionsMatrix[w][v] = this.connectionsMatrix[v][w];
+        }  
+    };
+
+    
+
+    console.log(this.connectionsMatrix);
   }
 
   addNodeConnection = (e) => {
     e.preventDefault();
+    if( this.state.from.length === 0 || this.state.to.length === 0 || this.state.to === this.state.from ||  this.state.cost < 0 )
+        return;
     this.nodeConnections.push( [this.state.from, this.state.to, this.state.cost] );
-    this.setState({from: "", to:"", cost: 0});
+    this.setState({from: "", to:"", cost: 1});
     console.log("Added");
   }
 
@@ -110,6 +157,10 @@ export default class InputNodes extends Component {
           <p/>
           <button style={divStyle.btnAdd} onClick={ this.addNodeConnection }>Add Node Connection</button>
           <p/>
+          <label>
+            Which Node:
+            <input style={divStyle.txtIn} type="text" name="who" value={this.state.who} onChange={this.handleChangeInput} />
+          </label>
           <input type="submit" value="Calculate" />
         </form>
       </div>
