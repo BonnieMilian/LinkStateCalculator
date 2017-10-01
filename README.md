@@ -73,4 +73,4 @@ Represent Nodes directions with a matrix, where **w** to **v** [w][v] and the co
 
 Representar las direcciones de los Nodos con una matriz, donde de **w** a **v** [w][v] y el contenido es el costo.
 
-![alt text](graph.png)
+![Alt text](graph.png)
