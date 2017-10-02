@@ -64,7 +64,7 @@ export default class InputNodes extends Component {
         return;
     
     console.log("Prepare Data");
-    console.log(this.nodeConnections);
+    //console.log(this.nodeConnections);
     
     for(var cn = 0; cn < this.nodeConnections.length; cn++) {
         if(!this.N.includes(this.nodeConnections[cn][0]))
@@ -76,7 +76,7 @@ export default class InputNodes extends Component {
     if(!this.N.includes(this.state.who))
         return;
 
-    console.log(this.N);
+    //console.log(this.N);
     
     for(var cn = 0; cn < this.N.length; cn++) {
         var costs = [];
@@ -96,9 +96,63 @@ export default class InputNodes extends Component {
         }  
     };
 
-    
-
     console.log(this.connectionsMatrix);
+
+
+    console.log("Calculate");
+    //N'
+    var Np = [this.state.who];
+    var whoIdx = this.N.indexOf(this.state.who);
+    //N' | D(N0) | D(N1) |...| D(Nn-1)
+    var NDTable = [[Np.slice()]];
+    for(var node = 0; node < this.N.length; node++ ) {
+        if(this.N[node] != this.state.who)
+            NDTable[0].push(
+                this.connectionsMatrix[whoIdx][node] === 999999999999999 ?
+                [999999999999999]
+                :
+                [this.connectionsMatrix[whoIdx][node], this.state.who]
+            );
+    }
+
+    var step = 1;
+    while( this.N.length != Np.length ) {
+        var wList = [], lowerWidx = 0, nowho = 1; w = 999999999999999;
+        for(var node = 0; node < this.N.length; node++) {
+            if(this.N[node] == this.state.who) {
+                nowho = 0;
+                continue;
+            }
+            if(!Np.includes(this.N[node])) {
+                wList.push([this.N[node], Number(NDTable[step - 1][node + nowho][0]) ]);
+                if( Number(NDTable[step - 1][node + nowho][0]) < w) {
+                    console.log(NDTable[step - 1][node + nowho]);
+                    w = Number(NDTable[step - 1][node + nowho][0]);
+                    lowerWidx = wList.length - 1;
+                }
+            }
+        }
+        Np.push(wList[lowerWidx][0]);
+
+        console.log( "W list: " + wList + "   lower: " + wList[lowerWidx] );
+
+        NDTable.push([Np.slice()]);
+
+        nowho = 1;
+        var wIdx = this.N.indexOf(wList[lowerWidx][0]);
+        for(var node = 0; node < this.N.length; node++) {
+            if(this.N[node] == this.state.who)
+                nowho = 0;
+            if(!Np.includes(this.N[node]) && (this.connectionsMatrix[wIdx][node] != 999999999999999))
+                NDTable[step].push( [Math.min( Number(NDTable[step - 1][node + nowho][0]) , Number(wList[lowerWidx][1]) + Number(this.connectionsMatrix[wIdx][node]) ), wList[lowerWidx][0] ] );
+            else if(this.N[node] != this.state.who)
+                NDTable[step].push(NDTable[step - 1][node + nowho]);
+        }
+        console.log(NDTable);
+        step++;
+    }
+
+    this.props.updateSolution(this.N, NDTable, this.state.who);
   }
 
   addNodeConnection = (e) => {
